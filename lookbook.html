@@ -1,0 +1,135 @@
+<html>
+	<head>
+		<script>
+		document.addEventListener('DOMContentLoaded', function(){
+			var index = 1,
+				container = document.getElementById('container'),
+				image = document.getElementById('js-image'),
+				products = document.getElementById('js-products'),
+				template = document.querySelector('#js-products-template > div'),
+				json = document.getElementById('js-json');
+			
+			image.addEventListener('click', function (event){
+			  var tag = document.createElement('div'),
+				newRow = template.cloneNode(true),
+				rect = event.target.getBoundingClientRect();
+			  
+			  tag.innerHTML = '<span>' + index + '<span>';
+			  tag.className = 'tag';
+			  tag.id = 'js-tag-' + index;
+			  container.appendChild(tag);
+			  newRow.id = 'js-row-' + index;
+			  newRow.dataset.index = index;
+			  newRow.querySelector('span').innerHTML = index;
+			  products.appendChild(newRow);
+
+			var posX = ( event.offsetX?(event.offsetX):event.pageX-image.offsetLeft ) + rect.left - 8,
+				posY = ( event.offsetY?(event.offsetY):event.pageY-image.offsetTop ) + rect.top - 8,
+				relativePosX = event.clientX - rect.left,
+				relativePosY = event.clientY - rect.top;
+				
+				tag.dataset.relX = relativePosX;
+				tag.dataset.relY = relativePosY;
+				tag.dataset.posX = posX;
+				tag.dataset.posY = posY;
+			  tag.style.left = (posX-13).toString() + 'px';
+			  tag.style.top = (posY-13).toString() + 'px';
+			  tag.style.visibility = "visible";
+			  
+			  index++;
+
+			  updateJSON();
+			});
+
+			document.addEventListener('click', function(event) {
+				if (event.target.className === 'js-remove-row') {
+					var id = event.target.parentNode.dataset.index,
+						tag = document.getElementById('js-tag-' + id);
+
+					event.target.parentNode.parentNode.removeChild(event.target.parentNode);
+					tag.parentNode.removeChild(tag);
+					
+					updateJSON();
+				}
+			});
+
+			document.addEventListener('change', function(event){
+				if (event.target.className === 'js-product') {
+					updateJSON();
+				}
+			});
+
+			function updateJSON()
+			{
+				var data = [];
+
+				[].forEach.call(document.querySelectorAll('.js-row'), function (row) {
+					if( !row.dataset.hasOwnProperty('index') ) {
+						return;
+					}
+
+					var tag = document.getElementById('js-tag-' + row.dataset.index);
+
+					data.push({
+						tagRelX: tag.dataset.relX,
+						taRelY: tag.dataset.relY,
+						tagPosX: tag.dataset.posX,
+						taPosY: tag.dataset.posY,
+						product: row.querySelector('select').value
+					});
+				} );				
+
+				json.innerHTML = JSON.stringify(data);
+			}
+		});		
+		</script>
+		<style>
+		.tag {
+		  position:absolute;
+		  background: #3E444E;
+		  -webkit-border-radius: 20px;
+		  -moz-border-radius: 20px;
+		  border-radius: 20px;
+		  border:2px solid #FFFFFF;
+		  visibility: hidden;
+		  height:22px;
+		  width:22px;
+		  z-index:2;
+		  user-select:none;
+		}
+		.tag span {
+		  position:absolute;
+		  width:20px;
+		  color: #FFFFFF;
+		  font-family: Helvetica, Arial, Sans-Serif;
+		  font-size: .8rem;
+		  text-align:center;
+		  margin:4px 0;
+		}
+		</style>
+	</head>
+	<body>
+		<form name="pointform" method="post">
+			<div id="container" style="position: relative">
+				Testing the offset <img src="http://www.chicobsession.com/wp-content/uploads/2013/09/look_of_the_day_quilted_jacket_6.jpg" width="300" id="js-image">								
+			</div>
+
+			<!--OUTPUT PRODUCTS HERE-->
+			<div id="js-products-template" style="display:none">
+				<div class="js-row">
+					<span></span>
+					<select class="js-product" name="product">
+						<option value="1">Product 1</option>
+						<option value="2">Product 2</option>
+						<option value="3">Product 3</option>
+					</select>
+					<button class="js-remove-row" type="button">Remove</button>
+				</div>
+			</div>
+
+			<div id="js-products"></div>
+
+			<textarea id="js-json"></textarea>
+		</form>
+	</body>
+</html>

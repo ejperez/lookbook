@@ -7,38 +7,24 @@
 				image = document.getElementById('js-image'),
 				products = document.getElementById('js-products'),
 				template = document.querySelector('#js-products-template > div'),
-				json = document.getElementById('js-json');
+				json = document.getElementById('js-json'),
+				jsonInput = document.getElementById('js-json-input');
 			
 			image.addEventListener('click', function (event){
-			  var tag = document.createElement('div'),
-				newRow = template.cloneNode(true),
-				rect = event.target.getBoundingClientRect();
-			  
-			  tag.innerHTML = '<span>' + index + '<span>';
-			  tag.className = 'tag';
-			  tag.id = 'js-tag-' + index;
-			  container.appendChild(tag);
-			  newRow.id = 'js-row-' + index;
-			  newRow.dataset.index = index;
-			  newRow.querySelector('span').innerHTML = index;
-			  products.appendChild(newRow);
+			  var rect = event.target.getBoundingClientRect(),
+			  	relativePosX = ( event.clientX - rect.left ) / image.clientWidth * 100 - 3.8 + '%',
+				relativePosY = ( event.clientY - rect.top ) / image.clientHeight * 100 - 3 + '%';
 
-			var posX = ( event.offsetX?(event.offsetX):event.pageX-image.offsetLeft ) + rect.left - 8,
-				posY = ( event.offsetY?(event.offsetY):event.pageY-image.offsetTop ) + rect.top - 8,
-				relativePosX = event.clientX - rect.left,
-				relativePosY = event.clientY - rect.top;
-				
-				tag.dataset.relX = relativePosX;
-				tag.dataset.relY = relativePosY;
-				tag.dataset.posX = posX;
-				tag.dataset.posY = posY;
-			  tag.style.left = (posX-13).toString() + 'px';
-			  tag.style.top = (posY-13).toString() + 'px';
-			  tag.style.visibility = "visible";
-			  
-			  index++;
+				createTag(relativePosX, relativePosY);
+			  	updateJSON();
+			});
 
-			  updateJSON();
+			document.getElementById('js-process-input').addEventListener('click', function(){
+				var inputData = JSON.parse( jsonInput.value );
+
+				inputData.forEach(function(data){
+					createTag(data.tagRelX, data.tagRelY, data.product);
+				});
 			});
 
 			document.addEventListener('click', function(event) {
@@ -59,8 +45,31 @@
 				}
 			});
 
-			function updateJSON()
-			{
+			
+			function createTag(relativePosX, relativePosY, productId) {
+				var tag = document.createElement('div'),
+				newRow = template.cloneNode(true);
+			  
+				tag.innerHTML = '<span>' + index + '<span>';
+				tag.className = 'tag';
+				tag.id = 'js-tag-' + index;
+				container.appendChild(tag);
+				newRow.id = 'js-row-' + index;
+				newRow.dataset.index = index;
+				newRow.querySelector('span').innerHTML = index;
+				newRow.querySelector('select').value = productId;
+				products.appendChild(newRow);
+
+				tag.dataset.relX = relativePosX;
+				tag.dataset.relY = relativePosY;
+				tag.style.left = relativePosX;
+				tag.style.top = relativePosY;
+				tag.style.visibility = "visible";
+				
+				index++;
+			}
+
+			function updateJSON() {
 				var data = [];
 
 				[].forEach.call(document.querySelectorAll('.js-row'), function (row) {
@@ -72,9 +81,7 @@
 
 					data.push({
 						tagRelX: tag.dataset.relX,
-						taRelY: tag.dataset.relY,
-						tagPosX: tag.dataset.posX,
-						taPosY: tag.dataset.posY,
+						tagRelY: tag.dataset.relY,
 						product: row.querySelector('select').value
 					});
 				} );				
@@ -110,8 +117,8 @@
 	</head>
 	<body>
 		<form name="pointform" method="post">
-			<div id="container" style="position: relative">
-				Testing the offset <img src="http://www.chicobsession.com/wp-content/uploads/2013/09/look_of_the_day_quilted_jacket_6.jpg" width="300" id="js-image">								
+			Testing the offset <div id="container" style="position: relative;display:inline-block">
+				<img src="http://www.chicobsession.com/wp-content/uploads/2013/09/look_of_the_day_quilted_jacket_6.jpg" width="300" id="js-image">								
 			</div>
 
 			<!--OUTPUT PRODUCTS HERE-->
@@ -119,17 +126,28 @@
 				<div class="js-row">
 					<span></span>
 					<select class="js-product" name="product">
+						<option value="" disabled selected>Select a product</option>
 						<option value="1">Product 1</option>
 						<option value="2">Product 2</option>
 						<option value="3">Product 3</option>
 					</select>
+
 					<button class="js-remove-row" type="button">Remove</button>
 				</div>
 			</div>
 
 			<div id="js-products"></div>
 
-			<textarea id="js-json"></textarea>
+			<div>
+				INPUT:
+				<textarea id="js-json-input"></textarea>
+				<button id="js-process-input" type="button">Process input</button>
+			</div>
+			
+			<div>
+				OUTPUT:
+				<textarea id="js-json"></textarea>
+			</div>			
 		</form>
 	</body>
 </html>
